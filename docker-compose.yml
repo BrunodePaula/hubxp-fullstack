@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    privileged: true
+    environment:
+      - SERVICES=s3
+      - EDGE_PORT=4566
+      - AWS_DEFAULT_REGION=us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./docker/init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh
+
+  lambda:
+    build:
+      context: ./lambda/notifyOrder
+      dockerfile: Dockerfile.dev
+    container_name: lambda
+    volumes:
+      - ./lambda/notifyOrder:/app
+      - /app/node_modules
+    ports:
+      - "3003:3003"
+    command: npx serverless offline --host 0.0.0.0 --httpPort 3003
+
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: backend
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/hubxp
+      - AWS_ENDPOINT=http://localstack:4566
+    depends_on:
+      - mongo
+      - localstack
+    command: npm run start:dev
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    command: yarn dev --host 
+
+volumes:
+  mongo-data:
