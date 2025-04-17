@@ -104,20 +104,27 @@ docker-compose down
 Esse comando irá parar e remover todos os containers, mas os dados persistem, pois estamos utilizando volumes para armazenar os dados do MongoDB.
 
 ### Configuração de Variáveis de Ambiente
-Algumas variáveis de ambiente são utilizadas para configurar a conexão do banco de dados e outros serviços.
+Este projeto utiliza variáveis de ambiente para configurar serviços como banco de dados, AWS (emulada via LocalStack) e URLs de APIs. Para facilitar a configuração, existem arquivos .env.example tanto no backend quanto no frontend — basta copiá-los e ajustar conforme necessário.
 
-**Variáveis de Ambiente**
-**MONGO_URI**: URI de conexão com o MongoDB (padrão: mongodb://mongo:27017/hubxp)
+**Backend** (/backend):
 
-**AWS_REGION**: Região da AWS (padrão: us-east-1)
+Crie um arquivo .env baseado no .env.example que já está presente na pasta. As principais variáveis utilizadas são:
 
-**AWS_BUCKET**: Nome do bucket no LocalStack (padrão: product-images)
+```bash
+MONGO_URI=mongodb://mongo:27017/hubxp
+AWS_REGION=us-east-1
+AWS_BUCKET=product-images
+AWS_ENDPOINT=http://localstack:4566
+LAMBDA_URL=http://lambda:3003/notify
+```
 
-**AWS_ENDPOINT**: Endpoint do LocalStack (padrão: http://localstack:4566)
+**Frontend** (/frontend):
 
-**LAMBDA_URL**: URL da função Lambda para notificações de pedidos
+Também há um arquivo .env.example no frontend. Para que a aplicação consiga se comunicar com a API do backend, crie um .env com a seguinte variável:
 
-As variáveis de ambiente devem ser definidas no arquivo .env no backend e na raiz do projeto.
+```bash
+VITE_BACK_API_URL=http://localhost:3000
+```
 
 ### Rodando o Seed
 O seed pode ser rodado para popular o banco de dados com dados iniciais. Acesse o container do backend e execute o seguinte comando:
